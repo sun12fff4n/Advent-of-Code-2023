@@ -6,8 +6,7 @@ import java.io.File;
 import java.util.*;
 
 public class Day1 {
-    private int calibration1(String path){
-        List<String> line = InputUtils.inputFileToStringList(new File(path));
+    private int calibration1(List<String> line){
         int[] arr = new int[line.size()];
         int idx =0;
         for(String l:line){
@@ -22,8 +21,7 @@ public class Day1 {
         }
         return Arrays.stream(arr).sum();
     }
-    private int calibration2 (String path){
-        List<String> line = InputUtils.inputFileToStringList(new File(path));
+    private int calibration2 (List<String> line){
         Map<String, Integer> string2Number = Map.of(
                 "one",1,
                 "two", 2,
@@ -81,11 +79,35 @@ public class Day1 {
         return sum;
     }
 
+    //another method, got idea from reddit, slower than v1 ^^
+    private int part2_v2(List<String> lines){
+        List<String> list = new ArrayList<>();
+        Map<String, String> string2Number = Map.of(
+                "one","one1one",
+                "two", "two2two",
+                "three", "three3three",
+                "four", "four4four",
+                "five", "five5five",
+                "six","six6six",
+                "seven", "seven7seven",
+                "eight","eight8eight",
+                "nine", "nine9nine",
+                "zero", "zero0zero");
+        for(String l: lines) {
+            for (Map.Entry<String, String> entry : string2Number.entrySet()) {
+                l = l.replaceAll(entry.getKey(), entry.getValue());
+            }
+            list.add(l);
+        }
+        return calibration1(list);
+    }
+
     public static void main(String[] args) {
         Day1 day1 = new Day1();
         String path = "src/Day1/input.txt";
-        System.out.println(day1.calibration1(path));
-        System.out.println(day1.calibration2(path));
+        List<String> inputs = InputUtils.inputFileToStringList(new File(path));
+        System.out.println(day1.calibration1(inputs));
+        System.out.println(day1.calibration2(inputs));
     }
 
 }
