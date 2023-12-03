@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.*;
 
 public class Day3 {
+    private final Set<Character> SYMBOLS = Set.of('&','*','#','%','/','$','-','+','@','=');
     private int part1(List<String> inputs){
         //surround input with ....
         int sum = 0;
@@ -17,19 +18,13 @@ public class Day3 {
                     int d = c;
                     boolean isPart = false;
                     while (isDigit(matrix[r][d])){
-                        if(!isPart &&(isSymbol(matrix[r-1][d]) || isSymbol(matrix[r+1][d])||
-                                isSymbol(matrix[r][d-1]) || isSymbol(matrix[r][d+1]) ||
-                                isSymbol(matrix[r-1][d-1]) || isSymbol(matrix[r-1][d+1])||
-                                isSymbol(matrix[r+1][d-1])||isSymbol(matrix[r+1][d+1]))){
+                        if(!isPart && hasSymbolInNeighborhood(matrix,r,d)){
                             isPart = true;
                         }
                         d++;
                     }
                     if(isPart) {
-                        String number = "";
-                        for (int n = c; n < d; n++) {
-                            number += matrix[r][n];
-                        }
+                        String number = new String(Arrays.copyOfRange(matrix[r], c, d));
                         c = d;
                         sum += Integer.parseInt(number);
                     }
@@ -40,40 +35,46 @@ public class Day3 {
         return sum;
     }
 
-    private char[][] convertTo2DMatrix(List<String> inputs){
-        char[][] matrix = new char[inputs.size()+2][inputs.get(1).length()+2];
-        for(int i = -1; i<inputs.size()+1;i++){
-            char[] splits = new char[inputs.get(1).length()+2];
+
+    private char[][] convertTo2DMatrix(List<String> inputs) {
+        char[][] matrix = new char[inputs.size() + 2][inputs.get(0).length() + 2];
+        for (int i = -1; i < inputs.size() + 1; i++) {
+            char[] splits = new char[inputs.get(0).length() + 2];
             if (i != -1 && i != inputs.size()) {
-                splits[0] = '.';
-                splits[splits.length-1] = '.';
-                for(int j = 0; j<inputs.get(i).length(); j++){
-                    splits[j+1] = inputs.get(i).charAt(j);
-                }
+                Arrays.fill(splits, '.');
+                System.arraycopy(inputs.get(i).toCharArray(), 0, splits, 1, inputs.get(i).length());
             } else {
                 Arrays.fill(splits, '.');
             }
-            matrix[i+1] = splits;
+            matrix[i + 1] = splits;
         }
         return matrix;
     }
-
+    private boolean hasSymbolInNeighborhood(char[][] matrix, int row, int column) {
+        for (int r = row - 1; r <= row + 1; r++) {
+            for (int c = column - 1; c <= column + 1; c++) {
+                if (isSymbol(matrix[r][c])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     private boolean isDigit(char ch){
-        return (9 >= (ch - '0')) && ((ch - '0') >= 0);
+        return Character.isDigit(ch);
     }
     private boolean isSymbol(char ch){
-        Set<Character> symbols = Set.of('&','*','#','%','/','$','-','+','@','=');
-        return symbols.contains(ch);
+
+        return SYMBOLS.contains(ch);
     }
 
     private boolean isStar(char ch){
         return ch == '*';
     }
 
-    private String findTwoDirectionNumber(char[] row, int c){
-        String s = findLeftNumber(row,c-1) + row[c] + findRightNumber(row,c+1);
-
-        return s;
+    private int findTwoDirectionNumber(char[] row, int c){
+       String s = findLeftNumber(row,c-1) + row[c] + findRightNumber(row,c+1);
+       return Integer.parseInt(s);
     }
 
     private String findRightNumber(char[] row,int c){
@@ -103,70 +104,40 @@ public class Day3 {
             for (int c = 1; c<matrix.length-1; c++){
                 if(isStar(matrix[r][c])){
                     ArrayList<Integer> gear = new ArrayList<>();
-                    if(isDigit(matrix[r - 1][c])){
-                        if(isDigit(matrix[r-1][c-1])&&isDigit(matrix[r-1][c+1])){
-                            gear.add(Integer.parseInt(findTwoDirectionNumber(matrix[r-1],c )));
-                        }else if(isDigit(matrix[r-1][c-1])&&!isDigit(matrix[r-1][c+1])){
-                            gear.add(Integer.parseInt(findLeftNumber(matrix[r-1],c)));
-                        }else if(!isDigit(matrix[r-1][c-1])&&isDigit(matrix[r-1][c+1])){
-                            gear.add(Integer.parseInt(findRightNumber(matrix[r-1],c)));
-                        }else{
-                            gear.add(matrix[r-1][c]-'0');
-                        }
+                    if(isDigit(matrix[r-1][c])) {
+                        gatherAdjacentRowGearValues(matrix, r, c, gear, true);
                     }
-
-                    if(isDigit(matrix[r-1][c-1])){
-                        if(!isDigit(matrix[r - 1][c])){
-                            gear.add(Integer.parseInt(findLeftNumber(matrix[r-1],c-1 )));
-                        }
-                    }
-                    if(isDigit(matrix[r-1][c+1])){
-                        if(!isDigit(matrix[r - 1][c])){
-                            gear.add(Integer.parseInt(findRightNumber(matrix[r-1],c+1)));
-                        }
-                    }
-
                     if(isDigit(matrix[r+1][c])){
-                        if(isDigit(matrix[r+1][c-1])&&isDigit(matrix[r+1][c+1])){
-                            gear.add(Integer.parseInt(findTwoDirectionNumber(matrix[r+1],c )));
-                        }else if(isDigit(matrix[r+1][c-1])&&!isDigit(matrix[r+1][c+1])){
-                            gear.add(Integer.parseInt(findLeftNumber(matrix[r+1],c)));
-                        }else if(!isDigit(matrix[r+1][c-1])&&isDigit(matrix[r+1][c+1])){
-                            gear.add(Integer.parseInt(findRightNumber(matrix[r+1],c)));
-                        }else{
-                            gear.add(matrix[r+1][c]-'0');
-                        }
+                        gatherAdjacentRowGearValues(matrix,r,c,gear,false);
                     }
-                    if(isDigit(matrix[r][c-1])){
-                        gear.add(Integer.parseInt(findLeftNumber(matrix[r],c-1 )));
-
-                    }
-                    if(isDigit(matrix[r][c+1])){
-                        gear.add(Integer.parseInt(findRightNumber(matrix[r],c+1 )));
-                    }
-                    if(isDigit(matrix[r+1][c-1])){
-                        if(!isDigit(matrix[r + 1][c])) {
-                            gear.add(Integer.parseInt(findLeftNumber(matrix[r + 1], c - 1)));
-                        }
-                    }
-                    if(isDigit(matrix[r+1][c+1])){
-                        if(!isDigit(matrix[r + 1][c])) {
-                            gear.add(Integer.parseInt(findRightNumber(matrix[r + 1], c + 1)));
-                        }
-                    }
-
+                    processDigit(matrix,r-1,c-1,r-1,c,gear);
+                    processDigit(matrix,r-1,c+1,r-1,c,gear);
+                    processDigit(matrix,r,c-1,-1,-1,gear);
+                    processDigit(matrix,r,c+1,-1,-1,gear);
+                    processDigit(matrix,r+1,c-1,r+1,c,gear);
+                    processDigit(matrix,r+1,c+1,r+1,c,gear);
                     if(gear.size() ==2){
                         gearRatio += gear.stream().reduce(1, (a, b) -> a * b);
                     }
                 }
             }
         }
-
         return gearRatio;
-
+    }
+    private void processDigit(char[][] matrix, int r1, int c1, int r2, int c2,ArrayList<Integer> gear) {
+        if (isDigit(matrix[r1][c1]) && (r2 == -1 || c2 == -1 || !isDigit(matrix[r2][c2]))) {
+            gear.add(findTwoDirectionNumber(matrix[r1], c1));
+        }
     }
 
-
+    private void gatherAdjacentRowGearValues(char[][] matrix, int r, int c, List<Integer> gear, boolean up) {
+        int adjacentRow = up? r-1:r+1;
+        if (isDigit(matrix[adjacentRow][c - 1]) || isDigit(matrix[adjacentRow][c + 1])) {
+            gear.add(findTwoDirectionNumber(matrix[adjacentRow], c));
+        } else {
+            gear.add(matrix[adjacentRow][c] - '0');
+        }
+    }
 
     public static void main(String[] args) {
         Day3 day3 = new Day3();
