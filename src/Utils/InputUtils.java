@@ -33,5 +33,20 @@ public class InputUtils {
         return inputs;
     }
 
+    public static List<String> inputFileToStringListNoBr(File file) {
+        List<String> inputs = new ArrayList<>();
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null) {
+                if(!line.trim().isEmpty()) {
+                    inputs.add(line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return inputs;
+    }
+
 
 }
